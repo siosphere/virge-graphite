@@ -1,7 +1,7 @@
 {
     "name": "virge/graphite",
     "require": {
-        "videlalvaro/php-amqplib": "2.5.*",
+        "php-amqplib/php-amqplib": "2.5.*",
         "virge/core": "dev-master",
         "virge/cli": "dev-master",
         "virge/db": "dev-master"
