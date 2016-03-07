@@ -1,20 +1,10 @@
 {
     "name": "virge/graphite",
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/siosphere/virge-core"
-        },
-        {
-            "type": "vcs",
-            "url": "https://github.com/siosphere/virge-db"
-        }
-    ],
     "require": {
         "videlalvaro/php-amqplib": "2.5.*",
         "virge/core": "dev-master",
         "virge/cli": "dev-master",
-        "virge/cli-db": "dev-master"
+        "virge/db": "dev-master"
     },
     "autoload": {
         "psr-4": {"Virge\\": "Virge/"}
