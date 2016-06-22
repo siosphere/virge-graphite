@@ -36,7 +36,7 @@ class SupervisorCommand
     {
         $vadmin = Config::get('base_path') . 'vadmin';
 
-        for($i = 0; $i <= $numToStart; $i++) {
+        for($i = 0; $i < $numToStart; $i++) {
             $this->workers[] = new Process(sprintf("php -f %s virge:graphite:worker %s", $vadmin, $this->queueName));
         }
     }
@@ -44,7 +44,7 @@ class SupervisorCommand
     public function filterWorkers()
     {
         return $this->workers = array_filter($this->workers, function($worker) {
-            !$worker->isFinished();
+            return !$worker->isFinished();
         });
     }
 }
