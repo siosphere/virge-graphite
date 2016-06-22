@@ -2,6 +2,7 @@
 namespace Virge\Graphite\Command;
 
 use Virge\Cli;
+use Virge\Cli\Component\Command;
 use Virge\Cli\Component\Process;
 use Virge\Core\Config;
 use Virge\Graphite\Component\Task;
@@ -13,7 +14,7 @@ use Virge\Virge;
  * 
  * @author Michael Kramer
  */
-class SupervisorCommand
+class SupervisorCommand extends Command
 {
     
     const COMMAND = 'virge:graphite:supervisor';
@@ -22,6 +23,11 @@ class SupervisorCommand
     
     public function run($queueName = 'graphite_queue', $totalWorkers = 3) 
     {
+        
+        if($this->instanceAlreadyRunning()) {
+            $this->terminate();
+        }
+
         $this->queueName = $queueName;
         while(true) {
             $workers = $this->filterWorkers();
@@ -47,4 +53,4 @@ class SupervisorCommand
             return !$worker->isFinished();
         });
     }
-}
+}   
