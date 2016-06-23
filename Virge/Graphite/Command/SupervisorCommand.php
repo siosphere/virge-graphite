@@ -24,7 +24,7 @@ class SupervisorCommand extends Command
     public function run($queueName = 'graphite_queue', $totalWorkers = 3) 
     {
         
-        if($this->instanceAlreadyRunning()) {
+        if($this->instanceAlreadyRunning([$queueName])) {
             $this->terminate();
         }
 
