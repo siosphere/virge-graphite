@@ -22,6 +22,21 @@ class QueueService {
      * @var AMQPStreamConnection 
      */
     protected $connection;
+
+    /**
+     * @var \DateTime
+     */
+    protected $lastKeepAliveCallback;
+
+    /**
+     * @var callable
+     */
+    protected $keepAliveCallback;
+
+    public function setKeepAliveCallback($callback)
+    {
+        $this->keepAliveCallback = $callback;
+    }
     
     /**
      * @param string $queue
@@ -52,10 +67,28 @@ class QueueService {
             
             $this->complete($message);
         });
-
         while(count($this->getChannel()->callbacks)) {
-            $this->getChannel()->wait();
+            try {
+                $this->getChannel()->wait(null, false, Config::get('queue', 'wait_timeout'));
+            } catch (\PhpAmqpLib\Exception\AMQPTimeoutException $timeout) {
+            }
+            $this->keepAliveCallback();
         }
+    }
+
+    public function keepAliveCallback()
+    {
+        if(!$this->keepAliveCallback) {
+            return;
+        }
+
+        $now = new \DateTime;
+        if($this->lastKeepAliveCallback && intval($this->lastKeepAliveCallback->diff($now)->format('%s')) - $this->lastKeepAliveCallback <= 10) {
+            return;
+        }
+
+        $this->lastKeepAliveCallback = $now;
+        call_user_func($this->keepAliveCallback);
     }
     
     /**

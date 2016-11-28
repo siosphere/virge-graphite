@@ -21,6 +21,7 @@ class SupervisorCommand extends Command
     protected $queueName;
     protected $workers = [];
     protected $totalWorkers = 3;
+    protected $queueUpCommand = "virge:graphite:worker";
     
     public function run($queueName = 'graphite_queue', $totalWorkers = 3) 
     {
@@ -28,7 +29,6 @@ class SupervisorCommand extends Command
         if($this->instanceAlreadyRunning([$queueName])) {
             $this->terminate();
         }
-
         $this->totalWorkers = $totalWorkers;
         $this->queueName = $queueName;
 
@@ -51,7 +51,7 @@ class SupervisorCommand extends Command
         $vadmin = Config::get('base_path') . 'vadmin';
 
         for($i = 0; $i < $numToStart; $i++) {
-            $this->workers[] = new Process(sprintf("php -f %s virge:graphite:worker %s", $vadmin, $this->queueName));
+            $this->workers[] = new Process(sprintf("php -f %s %s %s", $vadmin, $this->queueUpCommand, $this->queueName));
         }
     }
 

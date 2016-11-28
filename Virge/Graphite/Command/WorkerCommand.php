@@ -16,7 +16,6 @@ class WorkerCommand {
     const COMMAND = 'virge:graphite:worker';
     
     public function run($queueName = 'graphite_queue') {
-        
         $this->getQueueService()->listen($queueName, function(Task $task) {
             //dispatch this task
             Worker::dispatch($task);
