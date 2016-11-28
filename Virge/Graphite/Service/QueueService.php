@@ -62,6 +62,7 @@ class QueueService {
         };*/
 
         $this->getChannel()->basic_consume($queue, '', false, false, false, false, function($message) use($callback) {
+            $this->keepAliveCallback();
             $task = unserialize($message->body);
             call_user_func($callback, $task);
             
@@ -69,10 +70,9 @@ class QueueService {
         });
         while(count($this->getChannel()->callbacks)) {
             try {
-                $this->getChannel()->wait(null, false, Config::get('queue', 'wait_timeout'));
+                $this->getChannel()->wait();
             } catch (\PhpAmqpLib\Exception\AMQPTimeoutException $timeout) {
             }
-            $this->keepAliveCallback();
         }
     }
 
