@@ -20,6 +20,7 @@ class SupervisorCommand extends Command
     const COMMAND = 'virge:graphite:supervisor';
     protected $queueName;
     protected $workers = [];
+    protected $totalWorkers = 3;
     
     public function run($queueName = 'graphite_queue', $totalWorkers = 3) 
     {
@@ -28,13 +29,20 @@ class SupervisorCommand extends Command
             $this->terminate();
         }
 
+        $this->totalWorkers = $totalWorkers;
         $this->queueName = $queueName;
+
         while(true) {
-            $workers = $this->filterWorkers();
-            if(count($workers) < $totalWorkers) {
-                $this->startWorkers($totalWorkers - count($workers));
-            }
+            $this->tick();
             sleep(1);
+        }
+    }
+
+    public function tick()
+    {
+        $workers = $this->filterWorkers();
+        if(count($workers) < $this->totalWorkers) {
+            $this->startWorkers($this->totalWorkers - count($workers));
         }
     }
 
