@@ -57,9 +57,9 @@ class QueueService {
      */
     public function listen($queue, $callback) {
         $this->declareQueue($queue);
-        /*$callback = function($msg) {
-            echo " [x] Received ", $msg->body, "\n";
-        };*/
+        
+        $this->getChannel()
+            ->basic_qos(null, 1, null);
 
         $this->getChannel()->basic_consume($queue, '', false, false, false, false, function($message) use($callback) {
             $this->keepAliveCallback();
@@ -72,6 +72,8 @@ class QueueService {
             try {
                 $this->getChannel()->wait();
             } catch (\PhpAmqpLib\Exception\AMQPTimeoutException $timeout) {
+                echo "TIMEOUT EXCEPTION: \n";
+                echo $timeout->getMessage() . "\n\n";
             }
         }
     }
@@ -101,7 +103,7 @@ class QueueService {
     
     protected function declareQueue($queue) {
         $this->getChannel()
-        ->queue_declare($queue, false, true, false, false);
+            ->queue_declare($queue, false, true, false, false);
     }
     
     /**
