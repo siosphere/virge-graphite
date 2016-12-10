@@ -50,6 +50,15 @@ class QueueService {
         $message = new AMQPMessage($serializedTask, $this->getMessageProperties());
         $this->getChannel()->basic_publish($message, '', $queue);
     }
+
+    /**
+     * Close the connection to rabbitmq
+     */
+    public function finish()
+    {
+        $this->getChannel()->close();
+        $this->getConnection()->close();
+    }
     
     /**
      * Get a task from the queue and dispatch it
@@ -124,6 +133,11 @@ class QueueService {
         if(isset($this->connection)) {
             return $this->connection;
         }
+
+        //close out our queue connections on shutdown
+        register_shutdown_function(function() {
+            $this->finish();
+        });
         
         $host = Config::get('queue', 'host');
         $port = Config::get('queue', 'port');
