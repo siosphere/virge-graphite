@@ -26,21 +26,6 @@ class QueueService {
     protected $connection;
 
     /**
-     * @var \DateTime
-     */
-    protected $lastKeepAliveCallback;
-
-    /**
-     * @var callable
-     */
-    protected $keepAliveCallback;
-
-    public function setKeepAliveCallback($callback)
-    {
-        $this->keepAliveCallback = $callback;
-    }
-    
-    /**
      * @param string $queue
      * @param Task $task
      */
@@ -50,7 +35,9 @@ class QueueService {
         $this->declareQueue($queue);
         
         $message = new AMQPMessage($serializedTask, $this->getMessageProperties());
+        $this->getChannel()->confirm_select();
         $this->getChannel()->basic_publish($message, '', $queue);
+        $this->getChannel()->wait_for_pending_acks();
     }
 
     /**
@@ -65,7 +52,6 @@ class QueueService {
 
         $this->getChannel()->basic_consume($queue, '', false, false, false, false, function($message) use($callback) {
             try {
-                $this->keepAliveCallback();
                 $task = unserialize($message->body);
                 call_user_func($callback, $task);
                 $this->complete($message);
@@ -92,21 +78,6 @@ class QueueService {
         $this->listen($queue, $callback);
     }
 
-    public function keepAliveCallback()
-    {
-        if(!$this->keepAliveCallback) {
-            return;
-        }
-
-        $now = new \DateTime;
-        if($this->lastKeepAliveCallback && intval($this->lastKeepAliveCallback->diff($now)->format('%s')) - $this->lastKeepAliveCallback <= 10) {
-            return;
-        }
-
-        $this->lastKeepAliveCallback = $now;
-        call_user_func($this->keepAliveCallback);
-    }
-    
     /**
      * Mark the message as completed
      * @param type $message
