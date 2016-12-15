@@ -35,9 +35,7 @@ class QueueService {
         $this->declareQueue($queue);
         
         $message = new AMQPMessage($serializedTask, $this->getMessageProperties());
-        $this->getChannel()->confirm_select();
         $this->getChannel()->basic_publish($message, '', $queue);
-        $this->getChannel()->wait_for_pending_acks();
     }
 
     /**
