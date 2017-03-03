@@ -21,7 +21,7 @@ class Worker {
      * @param mixed $worker
      * @param string $serviceMethod
      */
-    public static function consume($taskName, $worker, $serviceMethod) {
+    public static function consume($taskName, $worker, $serviceMethod = null) {
         if(!isset(self::$workers[$taskName])) {
             self::$workers[$taskName] = [];
         }
@@ -49,8 +49,12 @@ class Worker {
             if(!$worker) {
                 throw new \InvalidArgumentException(sprintf("Invalid worker, work cannot be completed"));
             }
+
+            if(is_callable($worker)) {
+                return call_user_func_array($worker, [$task]);
+            }
             
-            call_user_func_array([$worker, $workerDefinition['serviceMethod']], [$task]);
+            return call_user_func_array([$worker, $workerDefinition['serviceMethod']], [$task]);
         }
     }
 }
