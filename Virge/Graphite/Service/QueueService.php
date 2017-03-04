@@ -76,9 +76,9 @@ class QueueService {
         try {
             $queue->consume(function(\AMQPEnvelope $message, \AMQPQueue $q) use($callback) {
                 try {
+                    $q->ack($message->getDeliveryTag());
                     $task = unserialize($message->getBody());
                     call_user_func($callback, $task);
-                    $q->ack($message->getDeliveryTag());
                 } catch(\Throwable $err) {
                     Cli::output($err->getMessage());
                 }
@@ -94,8 +94,8 @@ class QueueService {
     {
         $queue = new \AMQPQueue($this->getChannel());
         $queue->setName($queueName);
-        $queue->declareQueue();
         $queue->setFlags(AMQP_DURABLE);
+        $queue->declareQueue();
         $queue->bind($exchangeName, $queueName);
 
         return $queue;
