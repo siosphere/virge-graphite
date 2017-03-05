@@ -26,6 +26,11 @@ class QueueService {
     protected $channel;
 
     /**
+     * @var string
+     */
+    protected $consumerTag;
+
+    /**
      * @param string $queue
      * @param Task $task
      */
@@ -38,9 +43,11 @@ class QueueService {
 
         $queue = $this->declareQueue($queueName, $exchangeName);
         
-        return $ex->publish($message, $queueName, AMQP_MANDATORY, [
+        $success = $ex->publish($message, $queueName, AMQP_MANDATORY, [
             'delivery_mode' => 2,
         ]);
+
+        $this->close();
     }
 
     public function getChannel() : \AMQPChannel
@@ -73,21 +80,47 @@ class QueueService {
 
         $queue = $this->declareQueue($queueName, $exchangeName);
 
+        $consumerTag = $this->getConsumerTag();
+
+        //close out our queue connections on shutdown
+        register_shutdown_function(function() use ($queue, $consumerTag) {
+            $queue->cancel($consumerTag);
+            $this->close();
+        });
+
         try {
             $queue->consume(function(\AMQPEnvelope $message, \AMQPQueue $q) use($callback) {
                 try {
-                    $q->ack($message->getDeliveryTag());
                     $task = unserialize($message->getBody());
                     call_user_func($callback, $task);
                 } catch(\Throwable $err) {
                     Cli::output($err->getMessage());
                 }
-            });
+                return true;
+            }, AMQP_AUTOACK, $consumerTag);
         } catch ( \AMQPQueueException $ex) {
             Cli::output($ex->getMessage());
+
+        } catch (\Throwable $t) {
+
+            $queue->cancel($consumerTag);
+            $this->close();
+
+            throw $t;
         }
 
+        $queue->cancel($consumerTag);
         $this->close();
+
+    }
+
+    protected function getConsumerTag()
+    {
+        if(isset($this->consumerTag)) {
+            return $this->consumerTag;
+        }
+
+        return $this->consumerTag = gethostname() . ':' . getmypid();
     }
 
     protected function declareQueue($queueName, $exchangeName) : \AMQPQueue
@@ -110,11 +143,6 @@ class QueueService {
             return $this->connection;
         }
 
-        //close out our queue connections on shutdown
-        register_shutdown_function(function() {
-            $this->close();
-        });
-        
         $host = Config::get('queue', 'host');
         $port = Config::get('queue', 'port');
         $user = Config::get('queue', 'user');
