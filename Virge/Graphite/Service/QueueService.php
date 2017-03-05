@@ -146,13 +146,16 @@ class QueueService {
         $host = Config::get('queue', 'host');
         $port = Config::get('queue', 'port');
         $user = Config::get('queue', 'user');
-        $pass = COnfig::get('queue', 'pass');
-        
+        $pass = Config::get('queue', 'pass');
+        $heartbeat = Config::get('queue', 'heartbeat') ?? 5;
+
+
         $this->connection = new \AMQPConnection([
             'host' => $host,
             'port' => $port,
             'login' => $user,
             'password' => $pass,
+            'heartbeat' => $heartbeat
         ]);
 
         $this->connection->connect();
