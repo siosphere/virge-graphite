@@ -83,8 +83,7 @@ class QueueService {
         $consumerTag = $this->getConsumerTag();
 
         //close out our queue connections on shutdown
-        register_shutdown_function(function() use ($queue, $consumerTag) {
-            $queue->cancel($consumerTag);
+        register_shutdown_function(function() {
             $this->close();
         });
 
@@ -102,14 +101,12 @@ class QueueService {
             Cli::output($ex->getMessage());
 
         } catch (\Throwable $t) {
-
-            $queue->cancel($consumerTag);
+            Cli::output($t->getMessage());
             $this->close();
 
             throw $t;
         }
 
-        $queue->cancel($consumerTag);
         $this->close();
 
     }
