@@ -14,6 +14,7 @@ class QueueService {
     const SERVICE_ID = 'graphite.service.queue';
     const DEFAULT_EXCHANGE = 'virge_graphite';
     
+    public static $maxSocketFailures = 10;
     
     /**
      * @var \AMQPConnection 
@@ -29,6 +30,8 @@ class QueueService {
      * @var string
      */
     protected $consumerTag;
+
+    protected $numSocketFailures = 0;
 
     /**
      * @param string $queue
@@ -100,6 +103,15 @@ class QueueService {
         } catch ( \AMQPQueueException $ex) {
             Cli::output($ex->getMessage());
 
+        } catch(\AMQPException $ex) {
+            $this->close();
+
+            if($this->numSocketFailures++ > static::$maxSocketFailures) {
+                throw $ex;
+            }
+            
+            //try to reconnect
+            $this->listen($queueName, $callback, $exchangeName);
         } catch (\Throwable $t) {
             Cli::output($t->getMessage());
             $this->close();
