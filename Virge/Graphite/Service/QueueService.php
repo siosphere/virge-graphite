@@ -85,21 +85,18 @@ class QueueService {
 
         $consumerTag = $this->getConsumerTag();
 
-        //close out our queue connections on shutdown
-        register_shutdown_function(function() {
-            $this->close();
-        });
-
         try {
             $queue->consume(function(\AMQPEnvelope $message, \AMQPQueue $q) use($callback) {
                 try {
                     $task = unserialize($message->getBody());
                     call_user_func($callback, $task);
+                    $q->ack($message->getDeliveryTag());
                 } catch(\Throwable $err) {
                     Cli::output($err->getMessage());
+                    $q->nack($message->getDeliveryTag());
                 }
                 return true;
-            }, AMQP_AUTOACK, $consumerTag);
+            }, AMQP_NOPARAM, $consumerTag);
         } catch ( \AMQPQueueException $ex) {
             Cli::output($ex->getMessage());
 
@@ -112,6 +109,16 @@ class QueueService {
             
             //try to reconnect
             $this->listen($queueName, $callback, $exchangeName);
+        } catch(\AMQPConnectionException $ex) {
+            $this->reset();
+
+            if($this->numSocketFailures++ > static::$maxSocketFailures) {
+                throw $ex;
+            }
+
+            //try to reconnect
+            $this->listen($queueName, $callback, $exchangeName);
+
         } catch (\Throwable $t) {
             Cli::output($t->getMessage());
             $this->close();
@@ -175,6 +182,11 @@ class QueueService {
     public function close()
     {
         $this->getConnection()->disconnect();
+        $this->reset();
+    }
+
+    public function reset()
+    {
         unset($this->connection);
         unset($this->channel);
     }
