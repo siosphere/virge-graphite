@@ -37,7 +37,8 @@ class QueueService {
      * @param string $queue
      * @param Task $task
      */
-    public function push($queueName, Task $task, $exchangeName = self::DEFAULT_EXCHANGE) {
+    public function push($queueName, Task $task, $exchangeName = self::DEFAULT_EXCHANGE) : bool
+    {
         $serializedTask = serialize($task);
         
         $message = $serializedTask;
@@ -51,6 +52,8 @@ class QueueService {
         ]);
 
         $this->close();
+
+        return $success;
     }
 
     public function getChannel() : \AMQPChannel
