@@ -2,8 +2,11 @@
 namespace Virge\Graphite\Command;
 
 use Virge\Cli;
-use Virge\Cli\Component\Command;
-use Virge\Cli\Component\Process;
+use Virge\Cli\Component\{
+    Command,
+    Input,
+    Process
+};
 use Virge\Core\Config;
 use Virge\Graphite\Component\Task;
 use Virge\Graphite\Service\QueueService;
@@ -16,18 +19,24 @@ use Virge\Virge;
  */
 class SupervisorCommand extends Command
 {
-    
     const COMMAND = 'virge:graphite:supervisor';
+    const COMMAND_HELP = 'Start a number of workers against a given queue';
+    const COMMAND_USAGE = 'virge:graphite:supervisor <queueName> <totalWorkers>';
+
+
     protected $queueName;
     protected $workers = [];
     protected $totalWorkers = 3;
     protected $queueUpCommand = "virge:graphite:worker";
     
-    public function run($queueName = 'graphite_queue', $totalWorkers = 3) 
+    public function run(Input $input) 
     {
-        
+        $queueName = $input->getArgument(0) ?? 'graphite_queue';
+        $totalWorkers = $input->getArgument(1) ?? 3;
+
         if($this->instanceAlreadyRunning([$queueName])) {
-            $this->terminate();
+            Cli::error('Instance already running');
+            $this->terminate(-1);
         }
         $this->totalWorkers = $totalWorkers;
         $this->queueName = $queueName;

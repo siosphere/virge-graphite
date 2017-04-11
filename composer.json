@@ -2,7 +2,7 @@
     "name": "virge/graphite",
     "require-dev": {
         "virge/core": "~1.0",
-        "virge/cli": "~2.0",
+        "virge/cli": "~3.0",
         "virge/db": "~2.0"
     },
     "autoload": {
