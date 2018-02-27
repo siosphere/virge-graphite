@@ -1,9 +1,9 @@
 {
     "name": "virge/graphite",
     "require-dev": {
-        "virge/core": "~1.0",
-        "virge/cli": "~3.0",
-        "virge/db": "~2.0"
+        "virge/core": "~2.0",
+        "virge/cli": "~4.0",
+        "virge/db": "~3.0"
     },
     "autoload": {
         "psr-4": {"Virge\\": "Virge/"}

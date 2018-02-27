@@ -7,4 +7,4 @@ use Virge\Virge;
  * 
  * @author Michael Kramer
  */
-Virge::registerService(QueueService::SERVICE_ID, new QueueService());
+Virge::registerService(QueueService::SERVICE_ID, QueueService::class);
