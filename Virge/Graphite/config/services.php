@@ -1,6 +1,7 @@
 <?php
 
 use Virge\Graphite\Service\QueueService;
+use Virge\Core\Config;
 use Virge\Virge;
 
 /**
