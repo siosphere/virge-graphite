@@ -7,4 +7,6 @@ use Virge\Virge;
  * 
  * @author Michael Kramer
  */
-Virge::registerService(QueueService::SERVICE_ID, QueueService::class);
+Virge::registerService(QueueService::SERVICE_ID, function() {
+    return new QueueService(Config::get('queue', 'provider') ?? QueueService::PROVIDER_RABBITMQ);
+});
